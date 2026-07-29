@@ -62,6 +62,8 @@ h1{text-align:center;color:#302b63;font-size:1.8em;margin-bottom:5px}
 .toast.show{opacity:1}
 .toast.wrong{background:rgba(231,76,60,.9)}
 .toast.correct{background:rgba(39,174,96,.9)}
+.phrase-box{margin-top:15px;padding:12px 18px;background:#fff3cd;border:2px solid #f39c12;border-radius:10px;text-align:center;font-size:1em;color:#6d5200;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @media(max-width:768px){.cols{flex-direction:column}.card{padding:10px 6px;font-size:.9em}}
 </style>
 </head>
@@ -93,6 +95,9 @@ h1{text-align:center;color:#302b63;font-size:1.8em;margin-bottom:5px}
   <div class="cols" id="cols-area">
     <div class="col"><h3 id="h1">中文</h3><div id="c-a"></div></div>
     <div class="col"><h3 id="h2">英文</h3><div id="c-b"></div></div>
+  </div>
+  <div class="phrase-box" id="phrase" style="display:none">
+    <span id="ph-txt"></span>
   </div>
 </div>
 
@@ -126,6 +131,18 @@ var K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhy
 
 var M=[{z:'一月',e:'January',j:'いちがつ'},{z:'二月',e:'February',j:'にがつ'},{z:'三月',e:'March',j:'さんがつ'},{z:'四月',e:'April',j:'しがつ'},{z:'五月',e:'May',j:'ごがつ'},{z:'六月',e:'June',j:'ろくがつ'},{z:'七月',e:'July',j:'しちがつ'},{z:'八月',e:'August',j:'はちがつ'},{z:'九月',e:'September',j:'くがつ'},{z:'十月',e:'October',j:'じゅうがつ'},{z:'十一月',e:'November',j:'じゅういちがつ'},{z:'十二月',e:'December',j:'じゅうにがつ'}];
 
+// 每月關聯詞語（適合國小生）
+var P={'一月':{e:'New Year',j:'おしょうがつ（正月）'},'二月':{e:'Valentine',j:'せつぶん（節分）'},'三月':{e:'Spring',j:'ひなまつり（雛祭り）'},'四月':{e:'Cherry Blossom',j:'おはなみ（お花見）'},'五月':{e:'Children Day',j:'こどものひ（子供の日）'},'六月':{e:'Rainy Season',j:'つゆ（梅雨）'},'七月':{e:'Summer',j:'たなばた（七夕）'},'八月':{e:'Fireworks',j:'はなび（花火）'},'九月':{e:'Moon Viewing',j:'おつきみ（お月見）'},'十月':{e:'Halloween',j:'ハロウィン'},'十一月':{e:'Autumn Leaves',j:'こうよう（紅葉）'},'十二月':{e:'Christmas',j:'クリスマス'}};
+
+// 語音朗讀（瀏覽器內建）
+function SPK(txt,lg){
+  if(!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  var u=new SpeechSynthesisUtterance(txt);
+  u.lang=lg;u.rate=0.85;
+  window.speechSynthesis.speak(u);
+}
+
 var S={id:'',sc:0,mt:0,stg:1,stg1ok:0,stg2ok:0,selA:null,selB:null,ti:null,st:null,el:0};
 // stg=1: 中+英, stg=2: 中+日, stg1ok/stg2ok: 各階段答對數, selA/selB: 兩欄選取值
 
@@ -158,6 +175,7 @@ function GO(){
 }
 
 function RC(){
+  G('phrase').style.display='none';
   // stg=1: 中文 vs 英文, stg=2: 中文 vs 日文
   var a=SH(M),b=SH(M);
   var mk=function(lst,id,lg){
@@ -181,6 +199,19 @@ function CK(el,lg,k){
   var pv=document.querySelector('.card.sel[data-lg="'+lg+'"]');
   if(pv&&pv!==el)pv.classList.remove('sel');
   el.classList.toggle('sel');
+  // 語音朗讀
+  var txt=el.textContent;
+  if(lg==='zh')SPK(txt,'zh-CN');
+  else if(lg==='en')SPK(txt,'en-US');
+  else SPK(txt,'ja-JP');
+  // 顯示關聯詞語
+  if(el.classList.contains('sel')){
+    var ph=P[k];
+    if(ph){
+      G('phrase').style.display='block';
+      G('ph-txt').textContent=k+'：'+ph.e+' / '+ph.j;
+    }
+  }else{G('phrase').style.display='none';}
   if(lg==='zh')S.selA=el.classList.contains('sel')?k:null;
   else S.selB=el.classList.contains('sel')?k:null;
   // 兩欄都選了就自動判斷
@@ -205,7 +236,7 @@ function CF(){
     showToast(ans,'wrong');
   }
   for(var i=0;i<els.length;i++)els[i].classList.remove('sel');
-  S.selA=S.selB=null;
+  S.selA=S.selB=null;G('phrase').style.display='none';
 
   // 階段完成判斷
   if(S.stg===1 && S.stg1ok>=12){
