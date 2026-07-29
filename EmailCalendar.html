@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email 與行事曆</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Noto Sans TC',sans-serif;background:#f0f4f8;color:#1a202c;min-height:100vh}
+.top-bar{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:14px 20px;text-align:center;font-size:20px;font-weight:700}
+.container{max-width:700px;margin:20px auto;padding:0 16px}
+.panel{background:#fff;border-radius:16px;padding:20px 24px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:16px}
+.panel h2{font-size:20px;margin-bottom:12px;color:#4a5568;border-bottom:2px solid #667eea;padding-bottom:8px}
+.email-item,.event-item{padding:12px;border-bottom:1px solid #e2e8f0}
+.email-item:last-child,.event-item:last-child{border-bottom:none}
+.email-subj{font-weight:700;font-size:16px;color:#2d3748}
+.email-from{font-size:13px;color:#a0aec0;margin:4px 0}
+.email-date{font-size:12px;color:#cbd5e0}
+.event-title{font-weight:700;font-size:16px;color:#2d3748}
+.event-time{font-size:13px;color:#667eea;margin:4px 0}
+.event-loc{font-size:12px;color:#a0aec0}
+.loading{text-align:center;color:#a0aec0;padding:24px;font-size:16px}
+.btn-bar{text-align:center;margin-top:16px}
+.btn{display:inline-block;border:none;border-radius:10px;padding:10px 24px;font-size:16px;font-weight:600;color:#fff;background:#667eea;cursor:pointer;text-decoration:none;margin:4px}
+.btn:active{opacity:.85}
+.nav{display:flex;gap:8px;justify-content:center;margin-bottom:16px}
+.nav a{color:#667eea;font-size:14px;font-weight:600;text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="top-bar">Email 與行事曆</div>
+<div class="container">
+  <div class="nav">
+    <a href="?page=email">Email</a>
+    <a href="/exec">遊戲</a>
+  </div>
+
+  <div class="panel">
+    <h2>最近 10 封 Email</h2>
+    <div id="emailList"><div class="loading">載入中...</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>未來 7 天行事曆</h2>
+    <div id="eventList"><div class="loading">載入中...</div></div>
+  </div>
+</div>
+
+<script>
+function loadEmails() {
+  google.script.run
+    .withSuccessHandler(function(data) {
+      var el = document.getElementById('emailList');
+      if (!data || data.length === 0) {
+        el.innerHTML = '<div class="loading">沒有最近的 Email</div>';
+        return;
+      }
+      var html = '';
+      for (var i = 0; i < data.length; i++) {
+        var e = data[i];
+        html += '<div class="email-item">';
+        html += '<div class="email-subj">' + e.subject + '</div>';
+        html += '<div class="email-from">' + e.from + '</div>';
+        html += '<div class="email-date">' + new Date(e.date).toLocaleString('zh-TW') + '</div>';
+        html += '</div>';
+      }
+      el.innerHTML = html;
+    })
+    .withFailureHandler(function() {
+      document.getElementById('emailList').innerHTML = '<div class="loading">載入失敗（可能需要重新授權）</div>';
+    })
+    .getRecentEmails(10);
+}
+
+function loadEvents() {
+  google.script.run
+    .withSuccessHandler(function(data) {
+      var el = document.getElementById('eventList');
+      if (!data || data.length === 0) {
+        el.innerHTML = '<div class="loading">未來 7 天沒有活動</div>';
+        return;
+      }
+      var html = '';
+      for (var i = 0; i < data.length; i++) {
+        var ev = data[i];
+        html += '<div class="event-item">';
+        html += '<div class="event-title">' + ev.title + '</div>';
+        html += '<div class="event-time">' + new Date(ev.start).toLocaleString('zh-TW') + ' - ' + new Date(ev.end).toLocaleString('zh-TW') + '</div>';
+        if (ev.location) html += '<div class="event-loc">' + ev.location + '</div>';
+        html += '</div>';
+      }
+      el.innerHTML = html;
+    })
+    .withFailureHandler(function() {
+      document.getElementById('eventList').innerHTML = '<div class="loading">載入失敗（可能需要重新授權）</div>';
+    })
+    .getUpcomingEvents(10);
+}
+
+loadEmails();
+loadEvents();
+</script>
+</body>
+</html>

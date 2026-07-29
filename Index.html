@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英文單字配對遊戲</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Noto Sans TC',sans-serif;background:#f0f4f8;color:#1a202c;min-height:100vh}
+.top-bar{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;font-size:18px;font-weight:700}
+.top-bar span{min-width:80px}
+.timer{text-align:center}.score-display{text-align:right}
+
+.screen{display:none;max-width:600px;margin:0 auto;padding:20px 16px}
+.screen.active{display:block}
+
+.login-box{background:#fff;border-radius:16px;padding:32px 24px;box-shadow:0 4px 20px rgba(0,0,0,.1);margin-top:40px}
+.login-box h2{text-align:center;margin-bottom:24px;font-size:24px;color:#4a5568}
+.login-box label{display:block;font-size:16px;font-weight:600;color:#4a5568;margin-bottom:6px}
+.login-box input{width:100%;border:2px solid #e2e8f0;border-radius:10px;padding:14px 16px;font-size:18px;margin-bottom:20px;outline:none;transition:border .2s}
+.login-box input:focus{border-color:#667eea}
+.login-box .start-btn{width:100%;border:none;border-radius:12px;padding:16px;font-size:20px;font-weight:700;color:#fff;background:linear-gradient(135deg,#667eea,#764ba2);cursor:pointer;margin-top:8px}
+.login-box .start-btn:active{opacity:.85}
+
+.game-area{padding-top:10px}
+.game-info{display:flex;justify-content:space-between;align-items:center;background:#fff;border-radius:12px;padding:14px 18px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.08);font-size:18px;font-weight:700}
+.game-info .timer{color:#e53e3e;font-size:22px}
+.game-info .score{color:#48bb78;font-size:22px}
+
+.columns{display:flex;gap:12px}
+.column{flex:1}
+.column h3{text-align:center;font-size:16px;color:#a0aec0;margin-bottom:8px}
+
+.word-btn{display:block;width:100%;border:2px solid #e2e8f0;border-radius:12px;padding:14px 8px;margin-bottom:8px;font-size:16px;font-weight:600;background:#fff;cursor:pointer;text-align:center;transition:all .15s;word-break:break-word;user-select:none;-webkit-tap-highlight-color:transparent}
+.word-btn:active{transform:scale(.96)}
+.word-btn.selected{border-color:#667eea;background:#ebf4ff;color:#667eea}
+.word-btn.matched{border-color:#48bb78;background:#f0fff4;color:#48bb78;pointer-events:none;opacity:.5}
+.word-btn.wrong{border-color:#fc8181;background:#fed7d7;animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+.result-box{background:#fff;border-radius:16px;padding:32px 24px;box-shadow:0 4px 20px rgba(0,0,0,.1);margin-top:20px;text-align:center}
+.result-box h2{font-size:28px;color:#4a5568;margin-bottom:8px}
+.result-box .big-score{font-size:64px;font-weight:800;color:#48bb78;margin:16px 0}
+.result-box .time-text{font-size:18px;color:#a0aec0;margin-bottom:24px}
+.result-box .again-btn{display:inline-block;border:none;border-radius:12px;padding:14px 40px;font-size:20px;font-weight:700;color:#fff;background:linear-gradient(135deg,#667eea,#764ba2);cursor:pointer}
+.result-box .again-btn:active{opacity:.85}
+
+.saving-text{color:#ecc94b;font-size:14px;margin-top:12px}
+.saved-text{color:#48bb78;font-size:14px;margin-top:12px}
+
+.login-warn{color:#e53e3e;font-size:14px;text-align:center;margin-top:10px;display:none}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <span>英文單字配對</span>
+  <span class="timer" id="topTimer">00:00</span>
+  <span class="score-display" id="topScore">0/10</span>
+</div>
+
+<div id="loginScreen" class="screen active">
+  <div class="login-box">
+    <h2>開始遊戲</h2>
+    <label>班級</label>
+    <input id="className" type="text" placeholder="例如：一年甲班" autocomplete="off">
+    <label>座號</label>
+    <input id="seatNumber" type="number" placeholder="例如：15" min="1" max="99" autocomplete="off">
+    <div class="login-warn" id="loginWarn">請填寫班級和座號</div>
+    <button class="start-btn" onclick="startGame()">開始挑戰</button>
+  </div>
+</div>
+
+<div id="gameScreen" class="screen">
+  <div class="game-info">
+    <span>⏱ <span id="gameTimer">00:00</span></span>
+    <span>✅ <span id="gameScore">0</span> / 10</span>
+  </div>
+  <div class="columns">
+    <div class="column" id="enColumn">
+      <h3>英文</h3>
+    </div>
+    <div class="column" id="zhColumn">
+      <h3>中文</h3>
+    </div>
+  </div>
+</div>
+
+<div id="resultScreen" class="screen">
+  <div class="result-box">
+    <h2>遊戲結束！</h2>
+    <div class="big-score" id="resultScore"></div>
+    <div class="time-text">⏱ 完成時間：<span id="resultTime"></span></div>
+    <div id="saveStatus"></div>
+    <button class="again-btn" onclick="resetGame()">再玩一次</button>
+  </div>
+</div>
+
+<script>
+var words = [];
+var enOrder = [];
+var zhOrder = [];
+var selectedEn = -1;
+var matchedCount = 0;
+var totalPairs = 10;
+var timerInterval = null;
+var startTime = 0;
+var elapsedSeconds = 0;
+var className = '';
+var seatNumber = '';
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+
+function formatTime(sec) {
+  var m = Math.floor(sec / 60);
+  var s = sec % 60;
+  return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+function updateTimer() {
+  var now = Date.now();
+  elapsedSeconds = Math.floor((now - startTime) / 1000);
+  var t = formatTime(elapsedSeconds);
+  document.getElementById('gameTimer').textContent = t;
+  document.getElementById('topTimer').textContent = t;
+}
+
+function startTimer() {
+  startTime = Date.now();
+  elapsedSeconds = 0;
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(updateTimer, 200);
+  updateTimer();
+}
+
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+function startGame() {
+  className = document.getElementById('className').value.trim();
+  seatNumber = document.getElementById('seatNumber').value.trim();
+  if (!className || !seatNumber) {
+    document.getElementById('loginWarn').style.display = 'block';
+    return;
+  }
+  document.getElementById('loginWarn').style.display = 'none';
+  google.script.run.withSuccessHandler(function(data) {
+    words = data;
+    totalPairs = words.length;
+    enOrder = [];
+    zhOrder = [];
+    for (var i = 0; i < words.length; i++) {
+      enOrder.push(i);
+      zhOrder.push(i);
+    }
+    enOrder = shuffle(enOrder);
+    zhOrder = shuffle(zhOrder);
+    selectedEn = -1;
+    matchedCount = 0;
+    document.getElementById('topScore').textContent = '0/' + totalPairs;
+    document.getElementById('gameScore').textContent = '0';
+    renderGame();
+    showScreen('gameScreen');
+    startTimer();
+  }).getWords();
+}
+
+function renderGame() {
+  var enCol = document.getElementById('enColumn');
+  var zhCol = document.getElementById('zhColumn');
+  enCol.innerHTML = '<h3>英文</h3>';
+  zhCol.innerHTML = '<h3>中文</h3>';
+  for (var i = 0; i < enOrder.length; i++) {
+    var idx = enOrder[i];
+    var enBtn = document.createElement('button');
+    enBtn.className = 'word-btn';
+    enBtn.textContent = words[idx].en;
+    enBtn.setAttribute('data-idx', idx);
+    enBtn.onclick = (function(ii) { return function() { selectEn(ii); }; })(idx);
+    enCol.appendChild(enBtn);
+  }
+  for (var j = 0; j < zhOrder.length; j++) {
+    var zIdx = zhOrder[j];
+    var zhBtn = document.createElement('button');
+    zhBtn.className = 'word-btn';
+    zhBtn.textContent = words[zIdx].zh;
+    zhBtn.setAttribute('data-idx', zIdx);
+    zhBtn.onclick = (function(jj) { return function() { selectZh(jj); }; })(zIdx);
+    zhCol.appendChild(zhBtn);
+  }
+}
+
+function selectEn(idx) {
+  if (selectedEn === idx) {
+    selectedEn = -1;
+    updateHighlights();
+    return;
+  }
+  selectedEn = idx;
+  updateHighlights();
+}
+
+function selectZh(idx) {
+  if (selectedEn < 0) return;
+  var enButtons = document.getElementById('enColumn').querySelectorAll('.word-btn');
+  var zhButtons = document.getElementById('zhColumn').querySelectorAll('.word-btn');
+
+  if (selectedEn === idx) {
+    matchedCount++;
+    document.getElementById('gameScore').textContent = matchedCount;
+    document.getElementById('topScore').textContent = matchedCount + '/' + totalPairs;
+    for (var i = 0; i < enButtons.length; i++) {
+      if (parseInt(enButtons[i].getAttribute('data-idx')) === selectedEn) {
+        enButtons[i].classList.add('matched');
+      }
+    }
+    for (var j = 0; j < zhButtons.length; j++) {
+      if (parseInt(zhButtons[j].getAttribute('data-idx')) === idx) {
+        zhButtons[j].classList.add('matched');
+      }
+    }
+    selectedEn = -1;
+    updateHighlights();
+    if (matchedCount >= totalPairs) {
+      gameOver();
+    }
+  } else {
+    for (var k = 0; k < zhButtons.length; k++) {
+      if (parseInt(zhButtons[k].getAttribute('data-idx')) === idx) {
+        zhButtons[k].classList.add('wrong');
+        setTimeout(function() { zhButtons[k].classList.remove('wrong'); }, 300);
+      }
+    }
+    selectedEn = -1;
+    updateHighlights();
+  }
+}
+
+function updateHighlights() {
+  var enButtons = document.getElementById('enColumn').querySelectorAll('.word-btn');
+  for (var i = 0; i < enButtons.length; i++) {
+    var idx = parseInt(enButtons[i].getAttribute('data-idx'));
+    if (enButtons[i].classList.contains('matched')) continue;
+    if (idx === selectedEn) {
+      enButtons[i].classList.add('selected');
+    } else {
+      enButtons[i].classList.remove('selected');
+    }
+  }
+}
+
+function gameOver() {
+  stopTimer();
+  document.getElementById('resultScore').textContent = matchedCount + ' / ' + totalPairs;
+  document.getElementById('resultTime').textContent = formatTime(elapsedSeconds);
+  document.getElementById('saveStatus').innerHTML = '<div class="saving-text">儲存中...</div>';
+  document.getElementById('topScore').textContent = matchedCount + '/' + totalPairs;
+  showScreen('resultScreen');
+  google.script.run
+    .withSuccessHandler(function() {
+      document.getElementById('saveStatus').innerHTML = '<div class="saved-text">已儲存到試算表</div>';
+    })
+    .withFailureHandler(function() {
+      document.getElementById('saveStatus').innerHTML = '<div class="saving-text">儲存失敗，請聯絡老師</div>';
+    })
+    .saveScore({
+      className: className,
+      seatNumber: seatNumber,
+      score: matchedCount,
+      timeSeconds: elapsedSeconds,
+      timeText: formatTime(elapsedSeconds)
+    });
+}
+
+function resetGame() {
+  stopTimer();
+  selectedEn = -1;
+  matchedCount = 0;
+  words = [];
+  enOrder = [];
+  zhOrder = [];
+  document.getElementById('topTimer').textContent = '00:00';
+  document.getElementById('topScore').textContent = '0/10';
+  document.getElementById('className').value = '';
+  document.getElementById('seatNumber').value = '';
+  showScreen('loginScreen');
+}
+</script>
+
+</body>
+</html>

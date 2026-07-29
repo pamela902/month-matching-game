@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>月份雙語配對遊戲</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft JhengHei','Noto Sans TC',sans-serif;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
+.ct{background:rgba(255,255,255,.95);border-radius:20px;padding:30px;max-width:900px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+h1{text-align:center;color:#302b63;font-size:1.8em;margin-bottom:5px}
+.sub{text-align:center;color:#666;margin-bottom:20px;font-size:.9em}
+#login{text-align:center;padding:40px 20px}
+#login label{display:block;margin:10px 0 5px;font-weight:700;color:#555}
+#login input{padding:12px 20px;font-size:1.1em;border:2px solid #ddd;border-radius:10px;width:250px;text-align:center;transition:border .3s}
+#login input:focus{outline:0;border-color:#302b63}
+.btn{padding:14px 40px;font-size:1.1em;border:none;border-radius:30px;cursor:pointer;font-weight:700;transition:all .3s;margin-top:20px}
+.btn-go{background:linear-gradient(135deg,#302b63,#5a4eb0);color:#fff;box-shadow:0 4px 15px rgba(48,43,99,.4)}
+.btn-go:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(48,43,99,.6)}
+.btn-ok{background:linear-gradient(135deg,#11998e,#38ef7d);color:#fff;box-shadow:0 4px 15px rgba(17,153,142,.4)}
+.btn-ok:hover{transform:translateY(-2px)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+#game{display:none}
+.head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:15px;padding:12px 15px;background:#f8f9fa;border-radius:12px}
+.head .info{font-size:.95em;color:#444}
+.head .info b{color:#302b63}
+.timer{font-size:1.5em;font-weight:700;color:#e74c3c}
+.stage-tag{display:inline-block;padding:4px 14px;border-radius:20px;font-size:.85em;font-weight:700;color:#fff;margin-right:6px}
+.s1{background:#3498db}
+.s2{background:#e74c3c}
+.pbar{width:100%;height:8px;background:#e0e0e0;border-radius:4px;margin-bottom:5px}
+.pfill{height:100%;background:linear-gradient(90deg,#11998e,#38ef7d);border-radius:4px;transition:width .5s;width:0%}
+.ptext{text-align:center;color:#666;font-size:.85em;margin-bottom:15px}
+.cols{display:flex;gap:15px;justify-content:center}
+.col{flex:1;min-width:0}
+.col h3{text-align:center;padding:10px;border-radius:10px;margin-bottom:10px;font-size:1em;color:#fff}
+.col:nth-child(1) h3{background:#e74c3c}
+.col:nth-child(2) h3{background:#3498db}
+.card{display:block;width:100%;padding:14px 8px;margin-bottom:8px;background:#fff;border:2px solid #e0e0e0;border-radius:10px;font-size:1.05em;text-align:center;cursor:pointer;transition:all .2s;font-family:inherit}
+.card:hover:not(.matched):not(.sel){border-color:#aaa;background:#fafafa}
+.card.sel{border-color:#f39c12;background:#fff9e6;box-shadow:0 0 10px rgba(243,156,18,.5);font-weight:700}
+.card.matched{visibility:hidden;pointer-events:none}
+.card.wrong{border-color:#e74c3c;background:#fadbd8;animation:shake .5s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-4px)}}
+.area{text-align:center;margin-top:20px}
+#result{display:none;text-align:center;padding:40px 20px}
+#result .icon{font-size:5em;margin-bottom:20px}
+#result .msg{font-size:2em;font-weight:700;margin-bottom:10px}
+.good{color:#27ae60}
+.bad{color:#e74c3c}
+.stats{background:#f8f9fa;border-radius:15px;padding:20px;margin:20px 0;text-align:left;display:inline-block}
+.stats p{margin:8px 0;font-size:1.1em;color:#555}
+.stats p b{color:#302b63}
+.save-ok{color:#27ae60;font-size:.9em;margin-top:10px;display:none}
+.stage-popup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:999;justify-content:center;align-items:center}
+.stage-popup.show{display:flex}
+.stage-msg{background:#fff;border-radius:20px;padding:40px 50px;text-align:center;animation:pop .4s}
+@keyframes pop{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
+.stage-msg h2{font-size:2em;color:#302b63;margin-bottom:10px}
+.stage-msg p{color:#666;font-size:1.1em;margin-bottom:20px}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);padding:14px 28px;border-radius:12px;color:#fff;font-size:1em;font-weight:700;z-index:1000;opacity:0;transition:opacity .3s;pointer-events:none;text-align:center;max-width:90vw}
+.toast.show{opacity:1}
+.toast.wrong{background:rgba(231,76,60,.9)}
+.toast.correct{background:rgba(39,174,96,.9)}
+@media(max-width:768px){.cols{flex-direction:column}.card{padding:10px 6px;font-size:.9em}}
+</style>
+</head>
+<body>
+<div class="ct">
+
+<div id="login">
+  <h1>月份雙語配對遊戲</h1>
+  <p class="sub">第一階段：中文↔英文 &nbsp;|&nbsp; 第二階段：中文↔日文</p>
+  <label for="c1">班級：</label>
+  <input id="c1" placeholder="例：三年一班" maxlength="20">
+  <label for="c2">座號：</label>
+  <input id="c2" placeholder="例：5" maxlength="5">
+  <br>
+  <button class="btn btn-go" id="go">開始遊戲</button>
+</div>
+
+<div id="game">
+  <h1>月份雙語配對遊戲</h1>
+  <div class="head">
+    <div class="info">
+      <span class="stage-tag s1" id="tg">第一階段</span>
+      玩家：<b id="pn">---</b> | 得分：<b id="sc">0</b> 分
+    </div>
+    <div class="timer" id="tm">00:00</div>
+  </div>
+  <div class="pbar"><div class="pfill" id="pf"></div></div>
+  <p class="ptext">已完成 <b id="dn">0</b> / 12 組配對</p>
+  <div class="cols" id="cols-area">
+    <div class="col"><h3 id="h1">中文</h3><div id="c-a"></div></div>
+    <div class="col"><h3 id="h2">英文</h3><div id="c-b"></div></div>
+  </div>
+</div>
+
+<div id="result">
+  <div class="icon" id="ri"></div>
+  <div class="msg" id="rm"></div>
+  <div class="stats">
+    <p>玩家：<b id="rp"></b></p>
+    <p>總得分：<b id="rs"></b> 分（滿分 240）</p>
+    <p>花費時間：<b id="rt"></b></p>
+    <p>階段一：<b id="rc1"></b> / 12 &nbsp;|&nbsp; 階段二：<b id="rc2"></b> / 12</p>
+  </div>
+  <p class="save-ok" id="sv">已儲存成績紀錄</p>
+  <button class="btn btn-go" id="re">再玩一次</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- 階段轉場彈窗 -->
+<div class="stage-popup" id="pop"><div class="stage-msg">
+  <h2 id="pop-title"></h2>
+  <p id="pop-desc"></p>
+  <button class="btn btn-go" id="pop-btn"></button>
+</div></div>
+
+</div>
+
+<script>
+(function(){
+var U='https://xrmkwnnlvvrztjgjchwm.supabase.co';
+var K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhybWt3bm5sdnZyenRqZ2pjaHdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyMTM5NjYsImV4cCI6MjEwMDc4OTk2Nn0.XAmCRwKaFvJ3AI2Tn21wQwOlxoxBPw0HzgizJzIhKB0';
+
+var M=[{z:'一月',e:'January',j:'いちがつ'},{z:'二月',e:'February',j:'にがつ'},{z:'三月',e:'March',j:'さんがつ'},{z:'四月',e:'April',j:'しがつ'},{z:'五月',e:'May',j:'ごがつ'},{z:'六月',e:'June',j:'ろくがつ'},{z:'七月',e:'July',j:'しちがつ'},{z:'八月',e:'August',j:'はちがつ'},{z:'九月',e:'September',j:'くがつ'},{z:'十月',e:'October',j:'じゅうがつ'},{z:'十一月',e:'November',j:'じゅういちがつ'},{z:'十二月',e:'December',j:'じゅうにがつ'}];
+
+var S={id:'',sc:0,mt:0,stg:1,stg1ok:0,stg2ok:0,selA:null,selB:null,ti:null,st:null,el:0};
+// stg=1: 中+英, stg=2: 中+日, stg1ok/stg2ok: 各階段答對數, selA/selB: 兩欄選取值
+
+function G(id){return document.getElementById(id);}
+
+function FM(k){for(var i=0;i<M.length;i++){if(M[i].z===k||M[i].e===k||M[i].j===k)return M[i];}return null;}
+
+function SH(a){var b=a.slice();for(var i=b.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=b[i];b[i]=b[j];b[j]=t;}return b;}
+
+function FT(t){var m=Math.floor(t/60),s=t%60;return(m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+
+var toastTimer=null;
+function showToast(msg,type){
+  var t=G('toast');t.textContent=msg;t.className='toast '+type+' show';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){t.classList.remove('show');},3000);
+}
+
+function GO(){
+  var a=G('c1').value.trim(),b=G('c2').value.trim();
+  if(!a||!b){alert('請填寫班級和座號');return;}
+  S.id=a+b+'號';S.sc=0;S.mt=0;S.stg=1;S.stg1ok=0;S.stg2ok=0;S.selA=S.selB=null;S.el=0;S.st=Date.now();
+  G('login').style.display='none';G('game').style.display='block';G('result').style.display='none';
+  G('pn').textContent=S.id;G('sc').textContent='0';G('dn').textContent='0';G('pf').style.width='0%';G('tm').textContent='00:00';
+  G('tg').textContent='第一階段';G('tg').className='stage-tag s1';
+  G('h1').textContent='中文';G('h2').textContent='英文';
+  RC();
+  clearInterval(S.ti);
+  S.ti=setInterval(function(){S.el=Math.floor((Date.now()-S.st)/1000);G('tm').textContent=FT(S.el);},200);
+}
+
+function RC(){
+  // stg=1: 中文 vs 英文, stg=2: 中文 vs 日文
+  var a=SH(M),b=SH(M);
+  var mk=function(lst,id,lg){
+    G(id).innerHTML='';
+    for(var i=0;i<lst.length;i++){
+      var m=lst[i];
+      var t=(lg==='zh')?m.z:(lg==='en')?m.e:m.j;
+      var el=document.createElement('button');
+      el.className='card';el.setAttribute('data-lg',lg);el.setAttribute('data-k',m.z);el.textContent=t;
+      el.onclick=function(){CK(this,this.getAttribute('data-lg'),this.getAttribute('data-k'));};
+      G(id).appendChild(el);
+    }
+  };
+  mk(a,'c-a','zh');
+  if(S.stg===1){mk(b,'c-b','en');}
+  else{mk(b,'c-b','ja');}
+}
+
+function CK(el,lg,k){
+  if(el.classList.contains('matched'))return;
+  var pv=document.querySelector('.card.sel[data-lg="'+lg+'"]');
+  if(pv&&pv!==el)pv.classList.remove('sel');
+  el.classList.toggle('sel');
+  if(lg==='zh')S.selA=el.classList.contains('sel')?k:null;
+  else S.selB=el.classList.contains('sel')?k:null;
+  // 兩欄都選了就自動判斷
+  if(S.selA&&S.selB){setTimeout(function(){CF();},150);}
+}
+
+function CF(){
+  if(!S.selA||!S.selB)return;
+  var els=document.querySelectorAll('.card.sel'),good=(S.selA===S.selB);
+  if(good){
+    for(var i=0;i<els.length;i++)els[i].classList.add('matched');
+    S.sc+=10;S.mt++;
+    if(S.stg===1)S.stg1ok++;else S.stg2ok++;
+    G('sc').textContent=S.sc;G('dn').textContent=S.mt;G('pf').style.width=(S.mt/24*100)+'%';
+  }else{
+    for(var i=0;i<els.length;i++){els[i].classList.add('wrong');(function(e){setTimeout(function(){e.classList.remove('wrong');},500);})(els[i]);}
+    S.sc=Math.max(0,S.sc-2);G('sc').textContent=S.sc;
+    // 顯示正確答案
+    var lang=S.stg===1?'en':'ja';
+    var m1=FM(S.selA),m2=FM(S.selB);
+    var ans='答錯了！'+S.selA+' 的正確配對是 '+(lang==='en'?m1.e:m1.j)+'，'+S.selB+' 的正確配對是 '+(lang==='en'?m2.e:m2.j);
+    showToast(ans,'wrong');
+  }
+  for(var i=0;i<els.length;i++)els[i].classList.remove('sel');
+  S.selA=S.selB=null;
+
+  // 階段完成判斷
+  if(S.stg===1 && S.stg1ok>=12){
+    showPopup();
+  }else if(S.stg===2 && S.stg2ok>=12){
+    EG();
+  }
+}
+
+function showPopup(){
+  clearInterval(S.ti);
+  G('pop-title').textContent='第一階段完成！';
+  G('pop-desc').textContent='中文↔英文全對，準備進入第二階段：中文↔日文';
+  G('pop-btn').textContent='開始第二階段';
+  G('pop-btn').onclick=startStage2;
+  G('pop').classList.add('show');
+}
+
+function startStage2(){
+  G('pop').classList.remove('show');
+  S.stg=2;S.selA=S.selB=null;S.mt=S.stg1ok;
+  G('tg').textContent='第二階段';G('tg').className='stage-tag s2';
+  G('h1').textContent='中文';G('h2').textContent='日文';
+  G('dn').textContent=S.mt;G('pf').style.width=(S.mt/24*100)+'%';
+  RC();
+  S.st=Date.now();
+  S.ti=setInterval(function(){S.el=Math.floor((Date.now()-S.st)/1000);G('tm').textContent=FT(S.el);},200);
+}
+
+function EG(){
+  clearInterval(S.ti);var p=S.sc>=160;
+  G('game').style.display='none';G('result').style.display='block';
+  G('rp').textContent=S.id;G('rs').textContent=S.sc;G('rt').textContent=FT(S.el);
+  G('rc1').textContent=S.stg1ok;G('rc2').textContent=S.stg2ok;
+  if(p){G('ri').textContent='🎉🌟🏆';G('rm').textContent='你好棒！';G('rm').className='msg good';}
+  else{G('ri').textContent='💪📚🔥';G('rm').textContent='再加油！';G('rm').className='msg bad';}
+  SV(S.id,S.sc,S.stg1ok+S.stg2ok,S.el,p);
+}
+
+function SV(sid,sc,tm,ts,ps){
+  fetch(U+'/rest/v1/game_scores',{method:'POST',headers:{'Content-Type':'application/json','apikey':K,'Authorization':'Bearer '+K,'Prefer':'return=minimal'},body:JSON.stringify({student_id:sid,score:sc,total_matches:tm,time_seconds:ts,passed:ps})})
+  .then(function(r){if(r.ok){G('sv').style.display='block';}else{G('sv').textContent='成績儲存失敗';G('sv').style.display='block';G('sv').style.color='#e74c3c';}})
+  .catch(function(){G('sv').textContent='成績儲存失敗';G('sv').style.display='block';G('sv').style.color='#e74c3c';});
+}
+
+function RE(){G('result').style.display='none';G('login').style.display='block';G('c1').value='';G('c2').value='';}
+
+G('go').onclick=GO;
+G('re').onclick=RE;
+G('c2').onkeydown=function(e){if(e.key==='Enter')GO();};
+})();
+</script>
+</body>
+</html>
