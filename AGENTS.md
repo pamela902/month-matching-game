@@ -1,7 +1,7 @@
 # AGENTS.md — 學校工作助理
 
 ## 專案概述
-Google Apps Script 教育工具組，含英文單字配對遊戲、Email/行事曆檢視、每日自動彙報。
+Google Apps Script 教育工具組，目前含英文單字配對遊戲。
 
 ## 部署帳號
 **學校 Google Workspace 帳號**（非個人 Gmail）。所有 Gmail、Calendar、Drive 讀寫都對學校網域。
@@ -59,6 +59,6 @@ Google Apps Script 教育工具組，含英文單字配對遊戲、Email/行事�
 
 | 變數 | 說明 | 目前值 |
 |------|------|--------|
-| `WEB_APP_URL` | Apps Script 部署後的網址 | `https://script.google.com/macros/s/AKfycbyVdOSJxDNIDJVdA4iWU5nTmSHZUUh7_6_ZGlRZloqYt182illeInHyBsed8QZ3Z7qU/exec` |
+| `WEB_APP_URL` | Apps Script 部署後的網址 | `https://script.google.com/macros/s/AKfycbyCuiAG93D_04CwS4sGBovC4CVtp3dREi5X2Rn6zqgNa10z3hjAwsO6s8OmRG8nFPql/exec` |
 | `BRIEFING_PATH` | 每日彙報檔的本地同步路徑 | `G:\我的雲端硬碟\每日彙報_*.md` |
 | `SCHOOL_DRIVE_PATH` | 學校帳號 Drive 在本機的同步根目錄（若與個人分開） | *待填* |

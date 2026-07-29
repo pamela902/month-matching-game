@@ -26,6 +26,10 @@ h2{font-size:22px;margin-bottom:16px}
 .mb16{margin-bottom:16px}
 .gap8{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .panel{display:none}.panel.show{display:block}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:999;justify-content:center;align-items:center}
+.modal.show{display:flex}
+.modal-box{background:#fff;border-radius:16px;padding:30px;max-width:500px;width:90%;max-height:90vh;overflow-y:auto}
+.btn-gry{background:#edf2f7;color:#4a5568}
 .sound-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
 .sound-btn{cursor:pointer;border:none;border-radius:10px;padding:20px 10px;font-size:28px;background:#edf2f7;text-align:center}
 .lg-txt{font-size:96px;font-weight:800;font-family:monospace;text-align:center;margin:20px 0}
@@ -60,9 +64,25 @@ h2{font-size:22px;margin-bottom:16px}
     <button class="btn btn-suc" onclick="addStudent()">新增</button>
     <button class="btn btn-war" onclick="resetAtt()">全部重置</button>
     <button class="btn btn-pri" onclick="randomPick()">隨機抽人</button>
+    <button class="btn btn-pri" onclick="showImport()" style="background:#38b2ac">匯入名條</button>
+    <button class="btn btn-war" onclick="exportList()">匯出名單</button>
   </div>
   <div id="stuList" class="gap8"></div>
   <div id="pickResult" style="margin-top:16px;font-size:28px;font-weight:700;color:#667eea;text-align:center;min-height:50px"></div>
+</div>
+
+<!-- 匯入彈窗 -->
+<div id="importModal" class="modal" onclick="if(event.target==this)hideImport()">
+  <div class="modal-box">
+    <h2 style="margin-bottom:12px">匯入名條</h2>
+    <p style="color:#718096;margin-bottom:12px;font-size:14px">每行一個姓名，或逗號/空格分隔。也可貼 Excel 複製的欄位。</p>
+    <textarea id="importText" rows="10" style="width:100%;font-size:14px;margin-bottom:16px" oninput="countImport()" placeholder="貼上學生姓名，每行一個&#10;例如：&#10;張小華&#10;李小明&#10;王大同"></textarea>
+    <div class="gap8">
+      <button class="btn btn-suc" onclick="doImport()" style="font-size:16px;padding:12px 28px">確定匯入</button>
+      <button class="btn btn-gry" onclick="hideImport()" style="padding:12px 28px">取消</button>
+      <span style="font-size:13px;color:#a0aec0" id="importCount"></span>
+    </div>
+  </div>
 </div>
 
 <!-- 抽籤 -->
@@ -197,6 +217,29 @@ function randomPick(){
     el.style.color=['#667eea','#48bb78','#fc8181','#ecc94b','#ed8936'][Math.floor(Math.random()*5)];
     c++;if(c>20){clearInterval(iv);el.style.color='#e53e3e';}
   },80);
+}
+
+// 匯入匯出
+function showImport(){document.getElementById('importModal').classList.add('show');document.getElementById('importText').value=STU.join('\n');countImport();}
+function hideImport(){document.getElementById('importModal').classList.remove('show');}
+function countImport(){var t=document.getElementById('importText').value;var n=t.split('\n').map(function(s){return s.trim();}).filter(function(s){return s;}).length;document.getElementById('importCount').textContent='共 '+n+' 人';}
+function doImport(){
+  var t=document.getElementById('importText').value;
+  var names=[];var parts=t.split('\n');
+  for(var i=0;i<parts.length;i++){
+    var line=parts[i].trim();if(!line)continue;
+    var items=line.split(/[,，\s、]+/);
+    for(var j=0;j<items.length;j++){var s=items[j].trim();if(s)names.push(s);}
+  }
+  if(!names.length)return;
+  STU.length=0;for(var i=0;i<names.length;i++)STU.push(names[i]);
+  hideImport();renderStuList();
+  document.getElementById('grpStu').value=STU.join('\n');
+}
+function exportList(){
+  var text=STU.join('\n');var blob=new Blob([text],{type:'text/plain;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='學生名單_'+new Date().toISOString().slice(0,10)+'.txt';a.click();
+  URL.revokeObjectURL(a.href);
 }
 
 // Lottery

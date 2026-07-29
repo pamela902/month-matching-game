@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>月份雙語配對遊戲</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -14,6 +17,13 @@ h1{text-align:center;color:#302b63;font-size:1.8em;margin-bottom:5px}
 #login label{display:block;margin:10px 0 5px;font-weight:700;color:#555}
 #login input{padding:12px 20px;font-size:1.1em;border:2px solid #ddd;border-radius:10px;width:250px;text-align:center;transition:border .3s}
 #login input:focus{outline:0;border-color:#302b63}
+.mode-btn{display:inline-block;padding:10px 20px;margin:5px;border:2px solid transparent;border-radius:12px;cursor:pointer;font-size:1em;font-weight:700;color:#fff;transition:all .2s;opacity:.7}
+.mode-btn:hover{opacity:.9;transform:scale(1.05)}
+.mode-btn:has(:checked){opacity:1;box-shadow:0 4px 15px rgba(0,0,0,.2);transform:scale(1.05)}
+.mode-btn:nth-child(1){background:linear-gradient(135deg,#f9caa7,#f0a882)}
+.mode-btn:nth-child(2){background:linear-gradient(135deg,#a8d8ea,#7ec8e3)}
+.mode-btn:nth-child(3){background:linear-gradient(135deg,#f7c5cc,#e8a0b0)}
+.mode-btn input{display:none}
 .btn{padding:14px 40px;font-size:1.1em;border:none;border-radius:30px;cursor:pointer;font-weight:700;transition:all .3s;margin-top:20px}
 .btn-go{background:linear-gradient(135deg,#302b63,#5a4eb0);color:#fff;box-shadow:0 4px 15px rgba(48,43,99,.4)}
 .btn-go:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(48,43,99,.6)}
@@ -62,6 +72,10 @@ h1{text-align:center;color:#302b63;font-size:1.8em;margin-bottom:5px}
 .toast.show{opacity:1}
 .toast.wrong{background:rgba(231,76,60,.9)}
 .toast.correct{background:rgba(39,174,96,.9)}
+.img-popup{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1001;text-align:center}
+.img-popup.show{display:block;animation:popIn .4s}
+.img-popup img{max-width:300px;max-height:250px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+@keyframes popIn{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
 .phrase-box{margin-top:15px;padding:12px 18px;background:#fff3cd;border:2px solid #f39c12;border-radius:10px;text-align:center;font-size:1em;color:#6d5200;animation:fadeIn .3s}
 .ai-box{margin-top:8px;padding:10px 18px;background:#e8f4fd;border:2px solid #3498db;border-radius:10px;text-align:center;font-size:.9em;color:#1a5276;animation:fadeIn .3s}
 .ai-label{font-weight:700;margin-right:4px}
@@ -73,13 +87,26 @@ h1{text-align:center;color:#302b63;font-size:1.8em;margin-bottom:5px}
 <div class="ct">
 
 <div id="login">
-  <h1>月份雙語配對遊戲</h1>
-  <p class="sub">第一階段：中文↔英文 &nbsp;|&nbsp; 第二階段：中文↔日文</p>
+  <h1>月份雙語配對遊戲 <span style="font-size:.4em;color:#aaa;vertical-align:super">v5</span></h1>
+  <p class="sub">對照 中文 ． 英文 ． 日文 ｜ 先選要練什麼</p>
   <label for="c1">班級：</label>
   <input id="c1" placeholder="例：三年一班" maxlength="20">
   <label for="c2">座號：</label>
   <input id="c2" placeholder="例：5" maxlength="5">
   <br>
+  <div style="margin:12px 0">
+    <label class="mode-btn"><input type="radio" name="mode" value="both" checked> 綜合練習</label>
+    <label class="mode-btn"><input type="radio" name="mode" value="en"> 英文練習</label>
+    <label class="mode-btn"><input type="radio" name="mode" value="ja"> 日文練習</label>
+  </div>
+  <div style="margin:10px 0">
+    <span style="font-size:1em;font-weight:700;color:#555">📚 主題：</span>
+    <select id="topic" style="padding:10px 18px;font-size:1.05em;font-weight:700;border:3px solid #5a4eb0;border-radius:12px;cursor:pointer;background:linear-gradient(135deg,#f3e8ff,#e8dff5);color:#302b63;outline:none">
+      <option value="months">📅 月份</option>
+      <option value="weekdays">📆 星期</option>
+      <option value="weather">🌤️ 天氣</option>
+    </select>
+  </div>
   <div style="margin-top:15px;font-size:.8em;color:#999">
     <a href="#" onclick="document.getElementById('ai-set').style.display='block';this.style.display='none';return false;">AI 設定（選填）</a>
     <div id="ai-set" style="display:none;margin-top:5px">
@@ -92,7 +119,7 @@ h1{text-align:center;color:#302b63;font-size:1.8em;margin-bottom:5px}
 </div>
 
 <div id="game">
-  <h1>月份雙語配對遊戲</h1>
+  <h1>月份雙語配對遊戲 <span style="font-size:.4em;color:#aaa;vertical-align:super">v5</span></h1>
   <div class="head">
     <div class="info">
       <span class="stage-tag s1" id="tg">第一階段</span>
@@ -101,7 +128,7 @@ h1{text-align:center;color:#302b63;font-size:1.8em;margin-bottom:5px}
     <div class="timer" id="tm">00:00</div>
   </div>
   <div class="pbar"><div class="pfill" id="pf"></div></div>
-  <p class="ptext">已完成 <b id="dn">0</b> / 12 組配對</p>
+  <p class="ptext">已完成 <b id="dn">0</b> / 5 組配對</p>
   <div class="cols" id="cols-area">
     <div class="col"><h3 id="h1">中文</h3><div id="c-a"></div></div>
     <div class="col"><h3 id="h2">英文</h3><div id="c-b"></div></div>
@@ -119,20 +146,51 @@ h1{text-align:center;color:#302b63;font-size:1.8em;margin-bottom:5px}
   <div class="msg" id="rm"></div>
   <div class="stats">
     <p>玩家：<b id="rp"></b></p>
-    <p>總得分：<b id="rs"></b> 分（滿分 240）</p>
+    <p>總得分：<b id="rs"></b> 分（滿分 <span id="rmax">100</span>）</p>
     <p>花費時間：<b id="rt"></b></p>
-    <p>階段一：<b id="rc1"></b> / 12 &nbsp;|&nbsp; 階段二：<b id="rc2"></b> / 12</p>
+    <p>階段一：<b id="rc1"></b> / 5 &nbsp;|&nbsp; 階段二：<b id="rc2"></b> / 5</p>
   </div>
   <p class="save-ok" id="sv">已儲存成績紀錄</p>
   <button class="btn btn-go" id="re">再玩一次</button>
+  <br>
+  <button class="btn btn-go" id="quiz-btn" style="background:linear-gradient(135deg,#e67e22,#f39c12);margin-top:10px">隨堂小考</button>
+  <button class="btn btn-go" id="speak-btn" style="background:linear-gradient(135deg,#8e44ad,#9b59b6);margin-top:10px">口說測驗</button>
+  <button class="btn btn-go" id="listen-btn" style="background:linear-gradient(135deg,#16a085,#1abc9c);margin-top:10px">聽力測驗</button>
 </div>
 <div class="toast" id="toast"></div>
+
+<!-- 答對圖片彈窗 -->
+<div class="img-popup" id="img-pop"><img id="img-pop-img" src="" alt=""></div>
 
 <!-- 階段轉場彈窗 -->
 <div class="stage-popup" id="pop"><div class="stage-msg">
   <h2 id="pop-title"></h2>
   <p id="pop-desc"></p>
   <button class="btn btn-go" id="pop-btn"></button>
+</div></div>
+
+<!-- AI 小考彈窗 -->
+<div class="stage-popup" id="quiz-pop"><div class="stage-msg" style="max-width:500px">
+  <h2 id="quiz-title">AI 隨堂小考</h2>
+  <div id="quiz-body"></div>
+  <button class="btn btn-go" id="quiz-submit" style="display:none">交卷</button>
+  <button class="btn btn-go" id="quiz-close" style="display:none;background:#999">關閉</button>
+</div></div>
+
+<!-- 口說測驗彈窗 -->
+<div class="stage-popup" id="spk-pop"><div class="stage-msg" style="max-width:450px">
+  <h2 id="spk-title">口說測驗</h2>
+  <div id="spk-body"></div>
+  <button class="btn btn-go" id="spk-submit">開始錄音</button>
+  <button class="btn btn-go" id="spk-close" style="display:none;background:#999">關閉</button>
+</div></div>
+
+<!-- 聽力測驗彈窗 -->
+<div class="stage-popup" id="lis-pop"><div class="stage-msg" style="max-width:450px">
+  <h2 id="lis-title">聽力測驗</h2>
+  <div id="lis-body"></div>
+  <button class="btn btn-go" id="lis-submit">下一題</button>
+  <button class="btn btn-go" id="lis-close" style="display:none;background:#999">關閉</button>
 </div></div>
 
 </div>
@@ -142,9 +200,64 @@ h1{text-align:center;color:#302b63;font-size:1.8em;margin-bottom:5px}
 var U='https://xrmkwnnlvvrztjgjchwm.supabase.co';
 var K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhybWt3bm5sdnZyenRqZ2pjaHdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyMTM5NjYsImV4cCI6MjEwMDc4OTk2Nn0.XAmCRwKaFvJ3AI2Tn21wQwOlxoxBPw0HzgizJzIhKB0';
 
-var M=[{z:'一月',e:'January',j:'いちがつ'},{z:'二月',e:'February',j:'にがつ'},{z:'三月',e:'March',j:'さんがつ'},{z:'四月',e:'April',j:'しがつ'},{z:'五月',e:'May',j:'ごがつ'},{z:'六月',e:'June',j:'ろくがつ'},{z:'七月',e:'July',j:'しちがつ'},{z:'八月',e:'August',j:'はちがつ'},{z:'九月',e:'September',j:'くがつ'},{z:'十月',e:'October',j:'じゅうがつ'},{z:'十一月',e:'November',j:'じゅういちがつ'},{z:'十二月',e:'December',j:'じゅうにがつ'}];
+// 主題資料
+var TOPICS={
+  months:{
+    items:[
+      {z:'一月',e:'January',j:'いちがつ',s:'❄️',c:'#85c1e9',se:'______ is the first month of the year.',sj:'あたらしいとしは ______ です。',ph:'おしょうがつ（正月）'},
+      {z:'二月',e:'February',j:'にがつ',s:'❄️',c:'#85c1e9',se:"Valentine's Day is in ______.",sj:'______ はまださむいです。',ph:'せつぶん（節分）'},
+      {z:'三月',e:'March',j:'さんがつ',s:'🌸',c:'#f5b7b1',se:'Spring begins in ______.',sj:'はるは ______ からです。',ph:'ひなまつり（雛祭り）'},
+      {z:'四月',e:'April',j:'しがつ',s:'🌸',c:'#f5b7b1',se:'Cherry blossoms bloom in ______.',sj:'さくらは ______ にさきます。',ph:'おはなみ（お花見）'},
+      {z:'五月',e:'May',j:'ごがつ',s:'🌸',c:'#f5b7b1',se:"Children's Day is in ______.",sj:'______ はこどものひです。',ph:'こどものひ（子供の日）'},
+      {z:'六月',e:'June',j:'ろくがつ',s:'☀️',c:'#f9e79f',se:'Summer begins in ______.',sj:'______ はつゆのきせつです。',ph:'つゆ（梅雨）'},
+      {z:'七月',e:'July',j:'しちがつ',s:'☀️',c:'#f9e79f',se:'______ is a hot summer month.',sj:'______ はなつやすみです。',ph:'たなばた（七夕）'},
+      {z:'八月',e:'August',j:'はちがつ',s:'☀️',c:'#f9e79f',se:'People enjoy fireworks in ______.',sj:'______ ははなびのきせつです。',ph:'はなび（花火）'},
+      {z:'九月',e:'September',j:'くがつ',s:'🍂',c:'#edbb99',se:'School starts in ______.',sj:'______ はあきのはじまりです。',ph:'おつきみ（お月見）'},
+      {z:'十月',e:'October',j:'じゅうがつ',s:'🍂',c:'#edbb99',se:'Halloween is in ______.',sj:'______ にハロウィンがあります。',ph:'ハロウィン'},
+      {z:'十一月',e:'November',j:'じゅういちがつ',s:'🍂',c:'#edbb99',se:'The leaves turn red in ______.',sj:'______ はこうようがきれいです。',ph:'こうよう（紅葉）'},
+      {z:'十二月',e:'December',j:'じゅうにがつ',s:'❄️',c:'#85c1e9',se:'Christmas is in ______.',sj:'______ にクリスマスがあります。',ph:'クリスマス'}
+    ],
+    img:{'一月':'img/winter.jpeg','二月':'img/winter.jpeg','三月':'img/spring_trees.jpg','四月':'img/spring_trees.jpg','五月':'img/spring_trees.jpg','六月':'img/summer.jpg','七月':'img/summer.jpg','八月':'img/summer.jpg','九月':'img/autumn-.jpg','十月':'img/autumn-.jpg','十一月':'img/autumn-.jpg','十二月':'img/winter.jpeg'}
+  },
+  weekdays:{
+    items:[
+      {z:'星期一',e:'Monday',j:'げつようび',s:'📅',c:'#e74c3c',se:'______ is the first day of the week.',sj:'いっしゅうかんのはじめは ______ です。',ph:'しゅうのはじまり'},
+      {z:'星期二',e:'Tuesday',j:'かようび',s:'📅',c:'#e67e22',se:'______ comes after Monday.',sj:'げつようびのつぎは ______ です。',ph:'2ばんめのひ'},
+      {z:'星期三',e:'Wednesday',j:'すいようび',s:'📅',c:'#f1c40f',se:'______ is the middle of the week.',sj:'いっしゅうかんのまんなかは ______ です。',ph:'しゅうのまんなか'},
+      {z:'星期四',e:'Thursday',j:'もくようび',s:'📅',c:'#2ecc71',se:'______ comes before Friday.',sj:'きんようびのまえは ______ です。',ph:'4ばんめのひ'},
+      {z:'星期五',e:'Friday',j:'きんようび',s:'📅',c:'#3498db',se:'______ is the last weekday.',sj:'しゅうまつのまえは ______ です。',ph:'しゅうまつまえ'},
+      {z:'星期六',e:'Saturday',j:'どようび',s:'📅',c:'#9b59b6',se:'______ is the first day of the weekend.',sj:'しゅうまつのはじめは ______ です。',ph:'しゅうまつ'},
+      {z:'星期日',e:'Sunday',j:'にちようび',s:'📅',c:'#e91e63',se:'______ is a day of rest.',sj:'______ はおやすみのひです。',ph:'おやすみのひ'}
+    ],
+    img:{}
+  },
+  weather:{
+    items:[
+      {z:'晴天',e:'Sunny',j:'はれ',s:'☀️',c:'#f9e79f',se:'It is ______ today.',sj:'きょうは ______ です。',ph:'たいよう'},
+      {z:'陰天',e:'Cloudy',j:'くもり',s:'☁️',c:'#bdc3c7',se:'The sky is ______.',sj:'そらは ______ です。',ph:'くも'},
+      {z:'雨天',e:'Rainy',j:'あめ',s:'🌧️',c:'#85c1e9',se:'It is ______ outside.',sj:'そとは ______ です。',ph:'かさ'},
+      {z:'下雪',e:'Snowy',j:'ゆき',s:'❄️',c:'#d5f5e3',se:'It is ______ in winter.',sj:'ふゆは ______ がふります。',ph:'ふゆ'},
+      {z:'颳風',e:'Windy',j:'かぜ',s:'💨',c:'#d7bde2',se:'It is very ______ today.',sj:'きょうは ______ がつよいです。',ph:'あき'},
+      {z:'炎熱',e:'Hot',j:'あつい',s:'🔥',c:'#e74c3c',se:'Summer is very ______.',sj:'なつはとても ______ です。',ph:'なつ'},
+      {z:'寒冷',e:'Cold',j:'さむい',s:'🥶',c:'#aed6f1',se:'Winter is very ______.',sj:'ふゆはとても ______ です。',ph:'ふゆ'}
+    ],
+    img:{}
+  }
+};
 
-// 每月關聯詞語（適合國小生）
+// 動態取得當前主題資料
+function TM(){return TOPICS[G('topic').value];}
+function M(){return TM().items;}
+function IMG(){return TM().img||{};}
+function getPhrase(k){var m=FM(k);return m?m.ph:'';
+}
+var imgTimer=null;
+function showImg(month){
+  var src=IMG()[month];if(!src)return;
+  G('img-pop-img').src=src;G('img-pop').classList.add('show');
+  clearTimeout(imgTimer);
+  imgTimer=setTimeout(function(){G('img-pop').classList.remove('show');},800);
+}
 var P={'一月':{e:'New Year',j:'おしょうがつ（正月）'},'二月':{e:'Valentine',j:'せつぶん（節分）'},'三月':{e:'Spring',j:'ひなまつり（雛祭り）'},'四月':{e:'Cherry Blossom',j:'おはなみ（お花見）'},'五月':{e:'Children Day',j:'こどものひ（子供の日）'},'六月':{e:'Rainy Season',j:'つゆ（梅雨）'},'七月':{e:'Summer',j:'たなばた（七夕）'},'八月':{e:'Fireworks',j:'はなび（花火）'},'九月':{e:'Moon Viewing',j:'おつきみ（お月見）'},'十月':{e:'Halloween',j:'ハロウィン'},'十一月':{e:'Autumn Leaves',j:'こうよう（紅葉）'},'十二月':{e:'Christmas',j:'クリスマス'}};
 
 // 語音朗讀（瀏覽器內建）
@@ -156,12 +269,13 @@ function SPK(txt,lg){
   window.speechSynthesis.speak(u);
 }
 
-var S={id:'',sc:0,mt:0,stg:1,stg1ok:0,stg2ok:0,selA:null,selB:null,ti:null,st:null,el:0};
+var S={id:'',sc:0,mt:0,stg:1,stg1ok:0,stg2ok:0,selA:null,selB:null,ti:null,st:null,el:0,wrong:[],mode:'both'};
+// wrong 追蹤答錯的月份（用於 AI 分析）
 // stg=1: 中+英, stg=2: 中+日, stg1ok/stg2ok: 各階段答對數, selA/selB: 兩欄選取值
 
 function G(id){return document.getElementById(id);}
 
-function FM(k){for(var i=0;i<M.length;i++){if(M[i].z===k||M[i].e===k||M[i].j===k)return M[i];}return null;}
+function FM(k){var items=M();for(var i=0;i<items.length;i++){if(items[i].z===k||items[i].e===k||items[i].j===k)return items[i];}return null;}
 
 function SH(a){var b=a.slice();for(var i=b.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=b[i];b[i]=b[j];b[j]=t;}return b;}
 
@@ -212,14 +326,225 @@ function aiTip(month,stage){
   });
 }
 
+// AI 隨堂小考（本機出題，不依賴 Groq）
+var quizData=[],quizIdx=0,quizScore=0,quizTotal=0;
+function startQuiz(){
+  G('quiz-pop').classList.add('show');
+  G('quiz-title').textContent='隨堂小考';
+  G('quiz-submit').style.display='none';
+  G('quiz-close').style.display='none';
+  // 隨機抽 5 個月，隨機考英文或日文
+  var pool=SH(M()).slice(0,5);
+  quizData=[];
+  for(var i=0;i<pool.length;i++){
+    var m=pool[i];
+    var lang=S.mode==='en'?'en':(S.mode==='ja'?'ja':(Math.random()<0.5?'en':'ja'));
+    var correct=lang==='en'?m.e:m.j;
+    // 英文用造句填空，日文維持單字問答
+    var question=lang==='en'?('「'+m.z+'」英文是？ '+m.se):(m.z+' 的日文是什麼？');
+    var all=[];
+    var items=M();for(var j=0;j<items.length;j++){all.push(lang==='en'?items[j].e:items[j].j);}
+    var wrong=[];for(var j=0;j<all.length;j++){if(all[j]!==correct)wrong.push(all[j]);}
+    wrong=SH(wrong).slice(0,3);
+    var opts=SH([correct].concat(wrong));
+    var ans=opts.indexOf(correct);
+    quizData.push({q:question,opts:opts,ans:ans});
+  }
+  quizIdx=0;quizScore=0;quizTotal=quizData.length;
+  renderQuizQ();
+}
+
+function renderQuizQ(){
+  if(quizIdx>=quizTotal){
+    var emoji=quizScore===quizTotal?'🎉🏆':quizScore>=quizTotal/2?'👍':'💪';
+    G('quiz-title').textContent='測驗結果';
+    G('quiz-body').innerHTML='<h2 style="font-size:2.5em">'+emoji+'</h2><p style="font-size:1.4em">答對 <b>'+quizScore+'</b> / '+quizTotal+' 題</p>'+(quizScore===quizTotal?'<p style="color:#27ae60">太厲害了！全部答對！</p>':'<p style="color:#e67e22">再練習一下會更好！</p>');
+    G('quiz-submit').style.display='none';
+    G('quiz-close').textContent='關閉';
+    G('quiz-close').style.display='inline-block';
+    G('quiz-close').onclick=function(){G('quiz-pop').classList.remove('show');};
+    return;
+  }
+  var q=quizData[quizIdx];
+  G('quiz-title').textContent='第 '+(quizIdx+1)+' / '+quizTotal+' 題';
+  var h='<div style="text-align:left;margin-bottom:12px"><b>'+q.q+'</b></div>';
+  for(var j=0;j<q.opts.length;j++){
+    h+='<label class="quiz-opt" style="display:block;text-align:left;padding:8px 12px;margin:4px 0;border-radius:8px;cursor:pointer;transition:background .2s"><input type="radio" name="qa" value="'+j+'"> '+q.opts[j]+'</label>';
+  }
+  G('quiz-body').innerHTML=h;
+  G('quiz-submit').style.display='inline-block';
+  G('quiz-submit').textContent='下一題';
+  G('quiz-submit').onclick=checkQuizQ;
+  G('quiz-close').style.display='none';
+}
+
+function checkQuizQ(){
+  var sel=document.querySelector('input[name="qa"]:checked');
+  if(!sel){alert('請選擇一個答案');return;}
+  var ans=parseInt(sel.value),correct=quizData[quizIdx].ans;
+  if(ans===correct){quizScore++;}
+  var labels=document.querySelectorAll('.quiz-opt');
+  for(var i=0;i<labels.length;i++){
+    labels[i].style.pointerEvents='none';
+    if(i===correct)labels[i].style.background='#d4efdf';
+    if(i===ans&&i!==correct)labels[i].style.background='#fadbd8';
+  }
+  G('quiz-submit').textContent='繼續';
+  G('quiz-submit').onclick=function(){quizIdx++;renderQuizQ();};
+}
+
+// 口說測驗
+var spkData=[],spkIdx=0,spkScore=0,spkRec=null,spkTimer=null,spkCountdown=null;
+function startSpeak(){
+  var SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SpeechRecognition){alert('你的瀏覽器不支援語音辨識，請用 Chrome');return;}
+  var pool=SH(M()).slice(0,5);
+  spkData=[];spkIdx=0;spkScore=0;
+  for(var i=0;i<pool.length;i++){
+    var m=pool[i];
+    var lang=S.mode==='en'?'en':(S.mode==='ja'?'ja':(Math.random()<0.5?'en':'ja'));
+    var correct=lang==='en'?m.e.toLowerCase():m.j;
+    spkData.push({zh:m.z,lang:lang,correct:correct,text:lang==='en'?m.e:m.j});
+  }
+  G('spk-pop').classList.add('show');G('spk-close').style.display='none';
+  renderSpkQ();
+}
+
+function renderSpkQ(){
+  if(spkIdx>=spkData.length){
+    G('spk-title').textContent='口說成績';
+    var emoji=spkScore===spkData.length?'🎉🏆':spkScore>=spkData.length/2?'👍':'💪';
+    G('spk-body').innerHTML='<h2 style="font-size:2.5em">'+emoji+'</h2><p style="font-size:1.4em">答對 <b>'+spkScore+'</b> / '+spkData.length+' 題</p>';
+    G('spk-submit').style.display='none';G('spk-close').style.display='inline-block';
+    G('spk-close').onclick=function(){clearTimeout(spkTimer);clearInterval(spkCountdown);if(spkRec)spkRec.stop();G('spk-pop').classList.remove('show');};
+    return;
+  }
+  var q=spkData[spkIdx];
+  G('spk-title').textContent='第 '+(spkIdx+1)+' / '+spkData.length+' 題';
+  G('spk-body').innerHTML='<p style="font-size:2em;margin:20px 0">'+q.zh+'</p><p style="color:#666">請說出'+(q.lang==='en'?'英文':'日文')+'：</p><p id="spk-heard" style="font-size:1.3em;color:#9b59b6;min-height:1.5em"></p>';
+  G('spk-submit').style.display='inline-block';G('spk-submit').textContent='開始錄音';
+  G('spk-submit').disabled=false;
+  G('spk-submit').onclick=function(){speakListen(q);};
+  G('spk-close').style.display='none';
+}
+
+function speakListen(q){
+  var SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(spkRec){spkRec.stop();clearTimeout(spkTimer);}
+  spkRec=new SpeechRecognition();
+  spkRec.lang=q.lang==='en'?'en-US':'ja-JP';
+  spkRec.continuous=false;spkRec.interimResults=false;
+  G('spk-submit').disabled=true;G('spk-submit').textContent='聆聽中...';
+  G('spk-heard').textContent='';
+  var sec=5;G('spk-heard').textContent='請說話...（'+sec+'秒）';
+  spkCountdown=setInterval(function(){sec--;if(sec>0)G('spk-heard').textContent='請說話...（'+sec+'秒）';},1000);
+  spkTimer=setTimeout(function(){
+    clearInterval(spkCountdown);spkRec.stop();
+    G('spk-heard').textContent='超過 5 秒，請再試一次';
+    G('spk-submit').disabled=false;G('spk-submit').textContent='重試';
+    G('spk-submit').onclick=function(){speakListen(q);};
+  },5000);
+  spkRec.onresult=function(e){
+    clearTimeout(spkTimer);clearInterval(spkCountdown);
+    var heard=e.results[0][0].transcript.trim();
+    G('spk-heard').textContent='你說：'+heard;
+    var isCorrect=heard.toLowerCase().replace(/\s/g,'')===q.correct.toLowerCase().replace(/\s/g,'');
+    if(isCorrect){spkScore++;G('spk-heard').style.color='#27ae60';}
+    else{G('spk-heard').style.color='#e74c3c';G('spk-heard').textContent+='（正確：'+q.text+'）';}
+    G('spk-submit').disabled=false;G('spk-submit').textContent='下一題';
+    G('spk-submit').onclick=function(){spkIdx++;renderSpkQ();};
+  };
+  spkRec.onerror=function(e){
+    clearTimeout(spkTimer);clearInterval(spkCountdown);
+    G('spk-heard').textContent='辨識失敗，請再試一次';
+    G('spk-submit').disabled=false;G('spk-submit').textContent='重試';
+  };
+  spkRec.start();
+}
+
+// 聽力測驗
+var lisData=[],lisIdx=0,lisScore=0;
+function startListen(){
+  if(!window.speechSynthesis){alert('你的瀏覽器不支援語音播放，請用 Chrome');return;}
+  var pool=SH(M()).slice(0,5);
+  lisData=[];lisIdx=0;lisScore=0;
+  for(var i=0;i<pool.length;i++){
+    var m=pool[i];
+    var lang=S.mode==='en'?'en':(S.mode==='ja'?'ja':(Math.random()<0.5?'en':'ja'));
+    var spoken=lang==='en'?m.e:m.j;
+    var correct=m.z;
+    // 收集錯誤的中文選項
+    var items=M();var wrong=[];for(var j=0;j<items.length;j++){if(items[j].z!==correct)wrong.push(items[j].z);}
+    wrong=SH(wrong).slice(0,3);
+    var opts=SH([correct].concat(wrong));
+    var ans=opts.indexOf(correct);
+    lisData.push({spoken:spoken,lang:lang,opts:opts,ans:ans});
+  }
+  G('lis-pop').classList.add('show');G('lis-close').style.display='none';
+  renderLisQ();
+}
+
+function renderLisQ(){
+  if(lisIdx>=lisData.length){
+    var emoji=lisScore===lisData.length?'🎉🏆':lisScore>=lisData.length/2?'👍':'💪';
+    G('lis-title').textContent='聽力成績';
+    G('lis-body').innerHTML='<h2 style="font-size:2.5em">'+emoji+'</h2><p style="font-size:1.4em">答對 <b>'+lisScore+'</b> / '+lisData.length+' 題</p>';
+    G('lis-submit').style.display='none';G('lis-close').style.display='inline-block';
+    G('lis-close').onclick=function(){G('lis-pop').classList.remove('show');};
+    return;
+  }
+  var q=lisData[lisIdx];
+  G('lis-title').textContent='第 '+(lisIdx+1)+' / '+lisData.length+' 題';
+  var h='<p style="color:#666;margin-bottom:10px">請聽發音，選出正確的中文：</p>';
+  h+='<button class="btn btn-ok" id="lis-play" style="font-size:2em;padding:10px 30px">🔊 播放</button>';
+  h+='<div style="margin-top:15px" id="lis-opts"></div>';
+  G('lis-body').innerHTML=h;
+  // 選項
+  var od=G('lis-opts');
+  for(var i=0;i<q.opts.length;i++){
+    var lb=document.createElement('label');
+    lb.className='quiz-opt';
+    lb.style.cssText='display:block;text-align:left;padding:8px 12px;margin:4px 0;border-radius:8px;cursor:pointer;transition:background .2s';
+    lb.innerHTML='<input type="radio" name="la" value="'+i+'"> '+q.opts[i];
+    od.appendChild(lb);
+  }
+  // 播放按鈕
+  G('lis-play').onclick=function(){SPK(q.spoken,q.lang==='en'?'en-US':'ja-JP');};
+  G('lis-submit').style.display='inline-block';G('lis-submit').textContent='確認';
+  G('lis-submit').disabled=false;
+  G('lis-submit').onclick=function(){checkLisQ(q);};
+  G('lis-close').style.display='inline-block';
+  G('lis-close').onclick=function(){window.speechSynthesis.cancel();G('lis-pop').classList.remove('show');};
+  // 自動播放
+  setTimeout(function(){SPK(q.spoken,q.lang==='en'?'en-US':'ja-JP');},300);
+}
+
+function checkLisQ(q){
+  var sel=document.querySelector('input[name="la"]:checked');
+  if(!sel){alert('請選擇一個答案');return;}
+  var ans=parseInt(sel.value),correct=ans===q.ans;
+  if(correct)lisScore++;
+  var labels=document.querySelectorAll('#lis-opts .quiz-opt');
+  for(var i=0;i<labels.length;i++){
+    labels[i].style.pointerEvents='none';
+    if(i===q.ans)labels[i].style.background='#d4efdf';
+    if(i===ans&&!correct)labels[i].style.background='#fadbd8';
+  }
+  G('lis-submit').textContent='下一題';
+  G('lis-submit').onclick=function(){lisIdx++;renderLisQ();};
+}
+
 function GO(){
   var a=G('c1').value.trim(),b=G('c2').value.trim();
   if(!a||!b){alert('請填寫班級和座號');return;}
-  S.id=a+b+'號';S.sc=0;S.mt=0;S.stg=1;S.stg1ok=0;S.stg2ok=0;S.selA=S.selB=null;S.el=0;S.st=Date.now();
+  var mode=document.querySelector('input[name="mode"]:checked').value;
+  S.id=a+b+'號';S.sc=0;S.mt=0;S.stg=(mode==='ja'?2:1);S.stg1ok=0;S.stg2ok=0;S.selA=S.selB=null;S.el=0;S.st=Date.now();S.wrong=[];S.mode=mode;
   G('login').style.display='none';G('game').style.display='block';G('result').style.display='none';
   G('pn').textContent=S.id;G('sc').textContent='0';G('dn').textContent='0';G('pf').style.width='0%';G('tm').textContent='00:00';
-  G('tg').textContent='第一階段';G('tg').className='stage-tag s1';
-  G('h1').textContent='中文';G('h2').textContent='英文';
+  G('tg').textContent=mode==='ja'?'日文練習':(mode==='en'?'英文練習':'第一階段');
+  G('tg').className='stage-tag '+(mode==='ja'?'s2':(mode==='en'?'s1':'s1'));
+  G('h1').textContent='中文';
+  G('h2').textContent=mode==='ja'?'日文':'英文';
   RC();
   clearInterval(S.ti);
   S.ti=setInterval(function(){S.el=Math.floor((Date.now()-S.st)/1000);G('tm').textContent=FT(S.el);},200);
@@ -227,15 +552,17 @@ function GO(){
 
 function RC(){
   G('phrase').style.display='none';G('ai-tip').style.display='none';
-  // stg=1: 中文 vs 英文, stg=2: 中文 vs 日文
-  var a=SH(M),b=SH(M);
+  // stg=1: 中文 vs 英文, stg=2: 中文 vs 日文, 每階段隨機 5 個月
+  var pool=SH(M()).slice(0,5);
+  var a=SH(pool),b=SH(pool);
   var mk=function(lst,id,lg){
     G(id).innerHTML='';
     for(var i=0;i<lst.length;i++){
       var m=lst[i];
       var t=(lg==='zh')?m.z:(lg==='en')?m.e:m.j;
       var el=document.createElement('button');
-      el.className='card';el.setAttribute('data-lg',lg);el.setAttribute('data-k',m.z);el.textContent=t;
+      el.className='card';el.setAttribute('data-lg',lg);el.setAttribute('data-k',m.z);
+      el.textContent=t;
       el.onclick=function(){CK(this,this.getAttribute('data-lg'),this.getAttribute('data-k'));};
       G(id).appendChild(el);
     }
@@ -252,15 +579,14 @@ function CK(el,lg,k){
   el.classList.toggle('sel');
   // 語音朗讀
   var txt=el.textContent;
-  if(lg==='zh')SPK(txt,'zh-CN');
-  else if(lg==='en')SPK(txt,'en-US');
-  else SPK(txt,'ja-JP');
+  if(lg==='en')SPK(txt,'en-US');
+  else if(lg==='ja')SPK(txt,'ja-JP');
   // 顯示關聯詞語
   if(el.classList.contains('sel')){
-    var ph=P[k];
+    var ph=getPhrase(k);
     if(ph){
       G('phrase').style.display='block';
-      G('ph-txt').textContent=k+'：'+ph.e+' / '+ph.j;
+      G('ph-txt').textContent=k+'：'+ph;
     }
   }else{G('phrase').style.display='none';}
   if(lg==='zh')S.selA=el.classList.contains('sel')?k:null;
@@ -276,7 +602,8 @@ function CF(){
     for(var i=0;i<els.length;i++)els[i].classList.add('matched');
     S.sc+=10;S.mt++;
     if(S.stg===1)S.stg1ok++;else S.stg2ok++;
-    G('sc').textContent=S.sc;G('dn').textContent=S.mt;G('pf').style.width=(S.mt/24*100)+'%';
+    G('sc').textContent=S.sc;G('dn').textContent=S.mt;G('pf').style.width=(S.mt/10*100)+'%';
+    showImg(S.selA);
   }else{
     for(var i=0;i<els.length;i++){els[i].classList.add('wrong');(function(e){setTimeout(function(){e.classList.remove('wrong');},500);})(els[i]);}
     S.sc=Math.max(0,S.sc-2);G('sc').textContent=S.sc;
@@ -286,14 +613,16 @@ function CF(){
     var ans='答錯了！'+S.selA+' 的正確配對是 '+(lang==='en'?m1.e:m1.j)+'，'+S.selB+' 的正確配對是 '+(lang==='en'?m2.e:m2.j);
     showToast(ans,'wrong');
     aiTip(m1.z, S.stg);
+    if(S.wrong.indexOf(S.selA)<0)S.wrong.push(S.selA);
+    if(S.wrong.indexOf(S.selB)<0)S.wrong.push(S.selB);
   }
   for(var i=0;i<els.length;i++)els[i].classList.remove('sel');
   S.selA=S.selB=null;G('phrase').style.display='none';G('ai-tip').style.display='none';
 
   // 階段完成判斷
-  if(S.stg===1 && S.stg1ok>=12){
-    showPopup();
-  }else if(S.stg===2 && S.stg2ok>=12){
+  if(S.stg===1 && S.stg1ok>=5){
+    if(S.mode==='en'){EG();}else{showPopup();}
+  }else if(S.stg===2 && S.stg2ok>=5){
     EG();
   }
 }
@@ -312,17 +641,20 @@ function startStage2(){
   S.stg=2;S.selA=S.selB=null;S.mt=S.stg1ok;
   G('tg').textContent='第二階段';G('tg').className='stage-tag s2';
   G('h1').textContent='中文';G('h2').textContent='日文';
-  G('dn').textContent=S.mt;G('pf').style.width=(S.mt/24*100)+'%';
+  G('dn').textContent=S.mt;G('pf').style.width=(S.mt/10*100)+'%';
   RC();
   S.st=Date.now();
   S.ti=setInterval(function(){S.el=Math.floor((Date.now()-S.st)/1000);G('tm').textContent=FT(S.el);},200);
 }
 
 function EG(){
-  clearInterval(S.ti);var p=S.sc>=160;
+  clearInterval(S.ti);var max=(S.mode==='both')?100:50;var p=S.sc>=max*0.8;
   G('game').style.display='none';G('result').style.display='block';
   G('rp').textContent=S.id;G('rs').textContent=S.sc;G('rt').textContent=FT(S.el);
   G('rc1').textContent=S.stg1ok;G('rc2').textContent=S.stg2ok;
+  G('rmax').textContent=max;
+  var stgRow=document.querySelector('#result .stats p:last-child');
+  stgRow.style.display=S.mode!=='both'?'none':'';
   if(p){G('ri').textContent='🎉🌟🏆';G('rm').textContent='你好棒！';G('rm').className='msg good';}
   else{G('ri').textContent='💪📚🔥';G('rm').textContent='再加油！';G('rm').className='msg bad';}
   SV(S.id,S.sc,S.stg1ok+S.stg2ok,S.el,p);
@@ -334,10 +666,13 @@ function SV(sid,sc,tm,ts,ps){
   .catch(function(){G('sv').textContent='成績儲存失敗';G('sv').style.display='block';G('sv').style.color='#e74c3c';});
 }
 
-function RE(){G('result').style.display='none';G('login').style.display='block';G('c1').value='';G('c2').value='';}
+function RE(){G('result').style.display='none';G('login').style.display='block';G('c1').value='';G('c2').value='';document.querySelector('#result .stats p:last-child').style.display='';}
 
 G('go').onclick=GO;
 G('re').onclick=RE;
+G('quiz-btn').onclick=startQuiz;
+  G('speak-btn').onclick=startSpeak;
+  G('listen-btn').onclick=startListen;
 G('c2').onkeydown=function(e){if(e.key==='Enter')GO();};
 })();
 </script>
