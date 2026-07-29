@@ -63,6 +63,8 @@ h1{text-align:center;color:#302b63;font-size:1.8em;margin-bottom:5px}
 .toast.wrong{background:rgba(231,76,60,.9)}
 .toast.correct{background:rgba(39,174,96,.9)}
 .phrase-box{margin-top:15px;padding:12px 18px;background:#fff3cd;border:2px solid #f39c12;border-radius:10px;text-align:center;font-size:1em;color:#6d5200;animation:fadeIn .3s}
+.ai-box{margin-top:8px;padding:10px 18px;background:#e8f4fd;border:2px solid #3498db;border-radius:10px;text-align:center;font-size:.9em;color:#1a5276;animation:fadeIn .3s}
+.ai-label{font-weight:700;margin-right:4px}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @media(max-width:768px){.cols{flex-direction:column}.card{padding:10px 6px;font-size:.9em}}
 </style>
@@ -77,6 +79,14 @@ h1{text-align:center;color:#302b63;font-size:1.8em;margin-bottom:5px}
   <input id="c1" placeholder="例：三年一班" maxlength="20">
   <label for="c2">座號：</label>
   <input id="c2" placeholder="例：5" maxlength="5">
+  <br>
+  <div style="margin-top:15px;font-size:.8em;color:#999">
+    <a href="#" onclick="document.getElementById('ai-set').style.display='block';this.style.display='none';return false;">AI 設定（選填）</a>
+    <div id="ai-set" style="display:none;margin-top:5px">
+      <input id="ak" placeholder="貼上 Groq API Key" style="width:280px;font-size:.85em;padding:8px">
+      <br><span style="font-size:.75em;color:#aaa">輸入後 AI 會在答錯時給記憶技巧</span>
+    </div>
+  </div>
   <br>
   <button class="btn btn-go" id="go">開始遊戲</button>
 </div>
@@ -98,6 +108,9 @@ h1{text-align:center;color:#302b63;font-size:1.8em;margin-bottom:5px}
   </div>
   <div class="phrase-box" id="phrase" style="display:none">
     <span id="ph-txt"></span>
+  </div>
+  <div class="ai-box" id="ai-tip" style="display:none">
+    <span class="ai-label">AI 小提示：</span><span id="ai-txt"></span>
   </div>
 </div>
 
@@ -161,6 +174,44 @@ function showToast(msg,type){
   toastTimer=setTimeout(function(){t.classList.remove('show');},3000);
 }
 
+// AI 提示（使用 Groq）
+var aiTimer=null;
+function getGroqKey(){
+  var k=G('ak').value.trim();
+  if(k){try{localStorage.setItem('groq_key',k);}catch(e){}}else{k=localStorage.getItem('groq_key')||'';}
+  return k;
+}
+// 頁面載入時回填已存的 key
+(function(){var saved=localStorage.getItem('groq_key');if(saved)G('ak').value=saved;})();
+
+function aiTip(month,stage){
+  var gk=getGroqKey();if(!gk)return;
+  var lang=stage===1?'英文':'日文';
+  var box=G('ai-tip');box.style.display='block';G('ai-txt').textContent=' AI 老師思考中...';
+  clearTimeout(aiTimer);
+  fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+gk,'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'llama-3.3-70b-versatile',
+      messages:[
+        {role:'system',content:'你是台灣小學生的語言學習助手。用繁體中文回答，30字以內，語氣活潑有趣。'},
+        {role:'user',content:'學生答錯「'+month+'」的'+lang+'配對。給一個超簡單記憶技巧或有趣小知識（30字內）。'}
+      ],
+      max_tokens:80,temperature:0.7
+    })
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    var tip=d.choices&&d.choices[0]&&d.choices[0].message?d.choices[0].message.content:'多練習幾次就會記住囉！';
+    G('ai-txt').textContent=tip;
+    aiTimer=setTimeout(function(){box.style.display='none';},8000);
+  })
+  .catch(function(){
+    G('ai-txt').textContent='多練習幾次就會記住囉！';
+    aiTimer=setTimeout(function(){box.style.display='none';},5000);
+  });
+}
+
 function GO(){
   var a=G('c1').value.trim(),b=G('c2').value.trim();
   if(!a||!b){alert('請填寫班級和座號');return;}
@@ -175,7 +226,7 @@ function GO(){
 }
 
 function RC(){
-  G('phrase').style.display='none';
+  G('phrase').style.display='none';G('ai-tip').style.display='none';
   // stg=1: 中文 vs 英文, stg=2: 中文 vs 日文
   var a=SH(M),b=SH(M);
   var mk=function(lst,id,lg){
@@ -234,9 +285,10 @@ function CF(){
     var m1=FM(S.selA),m2=FM(S.selB);
     var ans='答錯了！'+S.selA+' 的正確配對是 '+(lang==='en'?m1.e:m1.j)+'，'+S.selB+' 的正確配對是 '+(lang==='en'?m2.e:m2.j);
     showToast(ans,'wrong');
+    aiTip(m1.z, S.stg);
   }
   for(var i=0;i<els.length;i++)els[i].classList.remove('sel');
-  S.selA=S.selB=null;G('phrase').style.display='none';
+  S.selA=S.selB=null;G('phrase').style.display='none';G('ai-tip').style.display='none';
 
   // 階段完成判斷
   if(S.stg===1 && S.stg1ok>=12){
